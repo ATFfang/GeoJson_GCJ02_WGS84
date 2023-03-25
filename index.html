@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>JSON文件转换器</title>
+  </head>
+  <body>
+    <h1>JSON文件转换器</h1>
+    <input type="file" id="fileInput">
+    <button id="convertButton">转换</button>
+    <p id="status"></p>
+    <a href="#" download="output.json" id="downloadLink">下载</a>
+    <script>
+      function convertFile() {
+        var fileInput = document.getElementById("fileInput");
+        var file = fileInput.files[0];
+        var reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = function() {
+          var data = JSON.parse(reader.result);
+          for (var i = 0; i < data.length; i++) {
+            var gcj02 = data[i];
+            var wgs84 = convert(gcj02);
+            data[i] = wgs84;
+          }
+          var output = JSON.stringify(data, null, 2);
+          var downloadLink = document.getElementById("downloadLink");
+          downloadLink.href = "data:text/json;charset=utf-8," + encodeURIComponent(output);
+          downloadLink.style.display = "inline";
+          document.getElementById("status").innerHTML = "转换完成";
+        }
+      }
+
+      function convert(gcj02) {
+        var pi = 3.1415926535897932384626;
+        var a = 6378245.0;
+        var ee = 0.00669342162296594323;
+        var x = gcj02.lng;
+        var y = gcj02.lat;
+        var z = Math.sqrt(x * x + y * y) + 0.00002 * Math.sin(y * pi);
+        var theta = Math.atan2(y, x) + 0.000003 * Math.cos(x * pi);
+        var lng = (z * Math.cos(theta) + 0.0065).toFixed(6);
+        var lat = (z * Math.sin(theta) + 0.006).toFixed(6);
+        return {lng: lng, lat: lat};
+      }
+
+      var convertButton = document.getElementById("convertButton");
+      convertButton.onclick = convertFile;
+    </script>
+  </body>
+</html>
+
